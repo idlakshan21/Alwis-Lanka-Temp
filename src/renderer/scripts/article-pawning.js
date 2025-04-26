@@ -1,17 +1,17 @@
 
-import { 
-    validateNICField, 
-    validateCustomerNameField, 
-    validateAddress1Field, 
-    validateAddress2Field, 
-    validatePhone1Field, 
-    validatePhone2Field, 
-    validateEmailField, 
-    validateGenderField, 
-    validateCustomerForm 
+import {
+    validateNICField,
+    validateCustomerNameField,
+    validateAddress1Field,
+    validateAddress2Field,
+    validatePhone1Field,
+    validatePhone2Field,
+    validateEmailField,
+    validateGenderField,
+    validateCustomerForm
 } from '../../validation/customerValidation.js';
 
-import { fetchCustomerByNIC } from '../../api/api.js';
+import { fetchCustomerByNIC, saveCustomerData } from '../../api/api.js';
 
 
 let articles = [];
@@ -372,13 +372,56 @@ function goToPreviousPage() {
     }
 }
 
-function postCustomerData() {
-    // This is where you might post customer data after validation
+async function handleCustomerSave() {
+
     if (validateCustomerForm()) {
-  
-        console.log("Customer form validated successfully");
-      
-        return true;
+        try {
+            const formData = {
+                customerName: document.getElementById('customerName').value.trim(),
+                nic: document.getElementById('nic').value.trim(),
+                addressOne: document.getElementById('address1').value.trim(),
+                addressTwo: document.getElementById('address2').value.trim() || "",
+                contactNumberOne: document.getElementById('phone1').value.trim(),
+                contactNumberTwo: document.getElementById('phone2').value.trim() || "",
+                email: document.getElementById('email').value.trim() || "",
+                gender: document.getElementById('gender').value,
+                status: "Active",
+                customerId: currentCustomerId || ""
+            };
+            const savedData = await saveCustomerData(formData);
+
+            if (savedData && savedData.customerId) {
+                currentCustomerId = savedData.customerId;
+
+                // console.log('Customer saved successfully:', savedData);
+                // console.log('Articles to be associated:', articles);
+
+                Swal.fire({
+                    title: 'Success',
+                    text: 'Customer information saved successfully.',
+                    icon: 'success',
+                    confirmButtonColor: '#FFC107',
+                    confirmButtonText: 'OK'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        goToNextPage();
+                    }
+                });
+                return true;
+            }
+
+        } catch (error) {
+            console.error('Error saving customer:', error);
+
+            Swal.fire({
+                title: 'Error',
+                text: 'Failed to save customer information. Please try again.',
+                icon: 'error',
+                confirmButtonColor: '#FFC107',
+                confirmButtonText: 'OK'
+            });
+        }
+
     } else {
         Swal.fire({
             title: 'Validation Error',
@@ -394,14 +437,14 @@ function postCustomerData() {
 async function handleCustomerFetch() {
     const nic = document.getElementById('nic').value;
     if (!nic) return;
-    
+
     try {
-     
+
         const customerData = await fetchCustomerByNIC(nic);
-        
+
         if (customerData) {
             currentCustomerId = customerData.customerId;
-            
+
             document.getElementById('customerName').value = customerData.customerName || '';
             document.getElementById('address1').value = customerData.addressOne || '';
             document.getElementById('address2').value = customerData.addressTwo || '';
@@ -409,15 +452,15 @@ async function handleCustomerFetch() {
             document.getElementById('phone2').value = customerData.contactNumberTwo || '';
             document.getElementById('email').value = customerData.email || '';
             document.getElementById('gender').value = customerData.gender || 'Male';
-            
-      
+
+
             validateCustomerForm();
-            
+
         }
     } catch (error) {
         console.error("Error fetching customer:", error);
-        
-    
+
+
         currentCustomerId = null;
         document.getElementById('customerName').value = '';
         document.getElementById('address1').value = '';
@@ -426,7 +469,7 @@ async function handleCustomerFetch() {
         document.getElementById('phone2').value = '';
         document.getElementById('email').value = '';
         document.getElementById('gender').value = 'Male';
-        
+
         Swal.fire({
             title: 'Customer Not Found',
             text: 'No customer found with the provided NIC number.',
@@ -435,13 +478,13 @@ async function handleCustomerFetch() {
             confirmButtonText: 'OK'
         });
     }
-    
+
     return currentCustomerId;
 }
 
 
 document.addEventListener('DOMContentLoaded', () => {
- 
+
     const karatInput = document.getElementById('karatValue');
     const addItemBtn = document.querySelector('.btn-next:not(#nextBtn)');
     const resetBtn = document.querySelector('.btn-secondary');
@@ -554,58 +597,58 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-   
+
     if (nicInput) {
         nicInput.addEventListener('input', validateNICField);
         nicInput.addEventListener('blur', validateNICField);
     }
-    
+
     if (customerNameInput) {
         customerNameInput.addEventListener('input', validateCustomerNameField);
         customerNameInput.addEventListener('blur', validateCustomerNameField);
     }
-    
+
     if (address1Input) {
         address1Input.addEventListener('input', validateAddress1Field);
         address1Input.addEventListener('blur', validateAddress1Field);
     }
-    
+
     if (address2Input) {
         address2Input.addEventListener('input', validateAddress2Field);
         address2Input.addEventListener('blur', validateAddress2Field);
     }
-    
+
     if (phone1Input) {
         phone1Input.addEventListener('input', validatePhone1Field);
         phone1Input.addEventListener('blur', validatePhone1Field);
     }
-    
+
     if (phone2Input) {
         phone2Input.addEventListener('input', validatePhone2Field);
         phone2Input.addEventListener('blur', validatePhone2Field);
     }
-    
+
     if (emailInput) {
         emailInput.addEventListener('input', validateEmailField);
         emailInput.addEventListener('blur', validateEmailField);
     }
-    
+
     if (genderSelect) {
         genderSelect.addEventListener('change', validateGenderField);
     }
-    
+
     if (arrowButton) {
-        arrowButton.addEventListener('click', function() {
+        arrowButton.addEventListener('click', function () {
             if (validateNICField()) {
                 handleCustomerFetch();
-             
+
             }
         });
     }
-    
-  
+
+
     if (nextSummaryBtn) {
-        nextSummaryBtn.addEventListener('click', function(event) {
+        nextSummaryBtn.addEventListener('click', function (event) {
             if (!validateCustomerForm()) {
                 event.preventDefault();
                 Swal.fire({
@@ -616,8 +659,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     confirmButtonText: 'OK'
                 });
             } else {
-                goToNextPage();
-               
+                handleCustomerSave()
+              
+             
             }
         });
     }
