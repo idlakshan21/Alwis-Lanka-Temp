@@ -1,0 +1,17 @@
+{
+  "name": "gold-pawning-system",
+  "version": "1.0.0",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^29.4.6"
+  },
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "sweetalert2": "^11.19.1",
+    "zod": "^3.24.3"
+  }
+}

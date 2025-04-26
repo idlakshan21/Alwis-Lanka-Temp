@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gold Pawning System</title>
+
+    <link rel="stylesheet" href="src/renderer/styles/styles.css">
+   
+
+</head>
+
+<body>
+    <div class="container">
+        <div class="navbar">
+            <div class="logo">
+                <img src="src/assets/Logo.jpg" width="55px" />
+                <div class="logo-tagline">Alwis Lanka</div>
+            </div>
+            <div>
+                <p class="date" id="datetime">Tue, April 22, 2025 | 01:45 AM</p>
+            </div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress" id="progressBar" style="width: 33.33%"></div>
+        </div>
+
+        <div class="steps">
+            <div class="step active" id="step1">
+                <div class="step-number">1</div>
+                <div class="step-title">Pawning Process</div>
+            </div>
+            <div class="step" id="step2">
+                <div class="step-number">2</div>
+                <div class="step-title">Customer Details</div>
+            </div>
+            <div class="step" id="step3">
+                <div class="step-number">3</div>
+                <div class="step-title">Review & Finalize</div>
+            </div>
+        </div>
+
+        <div class="page active" id="page1">
+            <div class="sections">
+                <div class="section">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="grossWeight">Gross Weight (g):</label>
+                            <input type="number" id="grossWeight" step="0.01" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="netWeight">Net Weight (g):</label>
+                            <input type="number" id="netWeight" step="0.01" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="karatValue">Karat Value:</label>
+                            <input type="number" id="karatValue" step="0.1" min="0" max="24" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="articleSelect">Article Name:</label>
+                            <div class="field-container" id="articleField">
+                                <select id="articleSelect">
+                                    <option value="Necklace">Necklace</option>
+                                    <option value="Bracelet">Bracelet</option>
+                                    <option value="Ring">Ring</option>
+                                    <option value="Earrings">Earrings</option>
+                                    <option value="Pendant">Pendant</option>
+                                    <option value="Bangle">Bangle</option>
+                                    <option value="custom">Custom Article...</option>
+                                </select>
+                                <input type="text" id="customArticle" class="custom-input"
+                                    placeholder="Enter custom article name...">
+                                <button type="button" class="clear-input" id="clearArticle">✕</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="durationSelect">Duration:</label>
+                            <div class="field-container" id="durationField">
+                                <select id="durationSelect">
+                                    <option value="1">1 Month</option>
+                                    <option value="3">3 Months</option>
+                                    <option value="6">6 Months</option>
+                                    <option value="12">1 Year</option>
+                                    <option value="custom">Custom Duration...</option>
+                                </select>
+                                <input type="number" id="customDuration" class="custom-input" min="1" step="1"
+                                    placeholder="Enter months...">
+                                <button type="button" class="clear-input" id="clearDuration">✕</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="interestRate">Interest Rate (%):</label>
+                            <input type="number" id="interestRate" step="0.01" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="pawnValue">Value of 1 Pawn (8g) in LKR:</label>
+                            <input type="number" id="pawnValue" step="0.01" min="0" required>
+                        </div>
+                        <div class="form-group span-3">
+                            <label for="notes" class="optional-label">Notes:</label>
+                            <input id="notes" rows="2" placeholder="Optional note about the item"></input>
+                        </div>
+                        <div class="add-button-container">
+                            <button type="button" class="btn-next">Add Article</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="section">
+                    <div class="table-section">
+                        <div class="table-container">
+                            <table id="articlesTable">
+                                <thead>
+                                    <tr>
+                                        <th>Article</th>
+                                        <th>Weight</th>
+                                        <th>Karat</th>
+                                        <th>Duration</th>
+                                        <th>Due Date</th>
+                                        <th>Gold Value</th>
+                                        <th>Interest Rate (%)</th>
+                                        <th>Daily Interest</th>
+                                        <th>Total Interest</th>
+                                        <th>Approved Loan</th>
+                                        <th>Adjusted Loan</th>
+                                        <th>Adjustment</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="articlesTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="totalLoanPanel" class="result-panel" style="display: none;">
+                        <div class="result-row total">
+                            <span>Total Gold Value:</span>
+                            <span id="totalGoldValue">LKR 0.00</span>
+                        </div>
+                        <div class="result-row total">
+                            <span>Total Interest:</span>
+                            <span id="totalInterest">LKR 0.00</span>
+                        </div>
+                        <div class="result-row total">
+                            <span>Total Calculated Loan Amount:</span>
+                            <span id="totalCalculatedLoan">LKR 0.00</span>
+                        </div>
+                        <div class="result-row total">
+                            <span>Total Adjustment:</span>
+                            <span id="totalAdjustment">LKR 0.00</span>
+                        </div>
+                        <div class="result-row total">
+                            <span>Total Loan Amount:</span>
+                            <span id="totalAdjustedLoan">LKR 0.00</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button type="button" class="btn-secondary">Reset Form</button>
+                    <button type="button" class="btn-next right-aligned" id="nextBtn" disabled>Next</button>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Page 2: Customer Details -->
+        <div class="page" id="page2">
+
+            <div class="section">
+                <div class="form-row">
+                    <div class="form-group-nic">
+                        <label for="nic">NIC Number:</label>
+                        <input type="text" id="nic" class="nic-input" required>
+                        <button type="button" id="arrow-button" class="arrow-button">→</button>
+                       
+                    </div>
+                    <div class="form-group">
+                        <label for="customerName">Customer Name:</label>
+                        <input type="text" id="customerName" required>
+                       
+                    </div>
+                    <div class="form-group">
+                        <label for="email" class="optional-label">Email:</label>
+                        <input type="email" id="email">
+                        
+                    </div>
+                    <div class="form-group">
+                        <label for="gender">Gender:</label>
+                        <select id="gender">
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+
+                        </select>
+                    </div>
+
+
+                    <div class="form-group span-5">
+                        <label for="address1">Address 1:</label>
+                        <input type="text" id="address1" required>
+                    </div>
+
+                    <div class="form-group span-5 ">
+                        <label for="address2" class="optional-label">Address 2:</label>
+                        <input type="text" id="address2">
+                    </div>
+
+
+                    <div class="form-group">
+                        <label for="phone1">Contact 1:</label>
+                        <input type="tel" id="phone1" required>
+                      
+                    </div>
+                    <div class="form-group">
+                        <label for="phone2" class="optional-label">Contact 2:</label>
+                        <input type="tel" id="phone2">
+                    </div>
+                    <div class="form-group">
+
+                    </div>
+
+                    <div class="action-buttons-customer ">
+                        <button type="button" id="btn-previous" class="btn-secondary btn-previous">Previous</button>
+                        <button type="button" id="btn-next-summary" class="btn-next">Next</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Page 3: Review & Finalize -->
+        <div class="page" id="page3">
+
+            <div class="review-container">
+                <div class="customer-details-panel">
+                    <div class="summary-section">
+                        <div class="result-row total">
+                            <span>Name:</span>
+                            <span id="summary-name"></span>
+                        </div>
+                        <div class="result-row total">
+                            <span>Gender:</span>
+                            <span id="summary-gender">-</span>
+                        </div>
+                        <div class="result-row total">
+                            <span>Address:</span>
+                            <span id="summary-address">-</span>
+                        </div>
+                        <div class="result-row total">
+                            <span>NIC:</span>
+                            <span id="summary-nic">-</span>
+                        </div>
+                        <div class="result-row total">
+                            <span>Contact:</span>
+                            <span id="summary-contact">-</span>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="gold-details-panel">
+                    <div class="summary-section">
+
+                        <div class="result-row total">
+                            <span>Total Gold Value:</span>
+                            <span id="summary-totalGoldValue">LKR 0.00</span>
+                        </div>
+                        <div class="result-row total">
+                            <span>Total Appoved Value:</span>
+                            <span id="summary-totalCalculatedValue">LKR 0.00</span>
+                        </div>
+                        <div class="result-row total">
+                            <span>Total Interest:</span>
+                            <span id="summary-totalInterest">LKR 0.00</span>
+                        </div>
+                        <div class="result-row total total-loan">
+                            <span>Total Loan Amount:</span>
+                            <span id="summary-totalLoan">LKR 0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="action-buttons">
+                <button type="button" id="prevBtn2" class="btn-secondary">Previous</button>
+                <button type="button" id="printReceiptBtn" class="btn-next">Print</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="node_modules/sweetalert2/dist/sweetalert2.all.min.js"></script>
+    <script type="module" src="src/renderer/scripts/article-pawning.js"></script>
+    <script type="module" src="src/renderer/scripts/script.js"></script>
+</body>
+
+</html>
