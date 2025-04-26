@@ -372,6 +372,26 @@ function goToPreviousPage() {
     }
 }
 
+function setPawningSummary(formData){
+    document.getElementById('summary-name').textContent = formData.customerName;
+    document.getElementById('summary-gender').textContent = formData.gender;
+
+    const fullAddress = formData.addressTwo ? `${formData.addressOne}, ${formData.addressTwo}` : formData.addressOne;
+    document.getElementById('summary-address').textContent = fullAddress;
+
+    document.getElementById('summary-nic').textContent = formData.nic;
+
+    let contactInfo = formData.contactNumberOne;
+    if (formData.contactNumberTwo) contactInfo += `, ${formData.contactNumberTwo}`;
+    if (formData.email) contactInfo += ` / ${formData.email}`;
+    document.getElementById('summary-contact').textContent = contactInfo;
+
+    document.getElementById('summary-totalGoldValue').textContent = 'LKR ' + totalGoldValueSum.toFixed(2);
+    document.getElementById('summary-totalInterest').textContent = 'LKR ' + totalInterestSum.toFixed(2);
+    document.getElementById('summary-totalCalculatedValue').textContent = 'LKR ' + totalCalculatedLoanSum.toFixed(2);
+    document.getElementById('summary-totalLoan').textContent = 'LKR ' + totalAdjustedLoanSum.toFixed(2);
+}
+
 async function handleCustomerSave() {
 
     if (validateCustomerForm()) {
@@ -404,6 +424,7 @@ async function handleCustomerSave() {
                     confirmButtonText: 'OK'
                 }).then((result) => {
                     if (result.isConfirmed) {
+                        setPawningSummary(formData);
                         goToNextPage();
                     }
                 });
@@ -483,6 +504,13 @@ async function handleCustomerFetch() {
 }
 
 
+
+
+
+
+
+
+
 document.addEventListener('DOMContentLoaded', () => {
 
     const karatInput = document.getElementById('karatValue');
@@ -491,6 +519,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const articlesTableBody = document.getElementById('articlesTableBody');
     const nextBtn = document.getElementById('nextBtn');
     const previousBtn = document.querySelector(".btn-previous");
+    const previousToCusBtn = document.getElementById('prevBtn2')
 
     const nicInput = document.getElementById('nic');
     const customerNameInput = document.getElementById('customerName');
@@ -525,6 +554,12 @@ document.addEventListener('DOMContentLoaded', () => {
         previousBtn.addEventListener('click', goToPreviousPage);
     } else {
         console.log('previous button not found');
+    }
+
+    if (previousToCusBtn) {
+        previousToCusBtn.addEventListener('click', goToPreviousPage);
+    } else {
+        console.log('next button not found');
     }
 
     if (resetBtn) {
