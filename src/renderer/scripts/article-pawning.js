@@ -11,6 +11,7 @@ import {
     validateCustomerForm 
 } from '../../validation/customerValidation.js';
 
+import { fetchCustomerByNIC } from '../../api/api.js';
 
 
 let articles = [];
@@ -20,6 +21,7 @@ let totalCalculatedLoanSum = 0;
 let totalAdjustedLoanSum = 0;
 let totalAdjustmentSum = 0;
 let currentPage = 1;
+let currentCustomerId = null;
 
 
 function updateProgressBar() {
@@ -389,9 +391,57 @@ function postCustomerData() {
     }
 }
 
+async function handleCustomerFetch() {
+    const nic = document.getElementById('nic').value;
+    if (!nic) return;
+    
+    try {
+     
+        const customerData = await fetchCustomerByNIC(nic);
+        
+        if (customerData) {
+            currentCustomerId = customerData.customerId;
+            
+            document.getElementById('customerName').value = customerData.customerName || '';
+            document.getElementById('address1').value = customerData.addressOne || '';
+            document.getElementById('address2').value = customerData.addressTwo || '';
+            document.getElementById('phone1').value = customerData.contactNumberOne || '';
+            document.getElementById('phone2').value = customerData.contactNumberTwo || '';
+            document.getElementById('email').value = customerData.email || '';
+            document.getElementById('gender').value = customerData.gender || 'Male';
+            
+      
+            validateCustomerForm();
+            
+        }
+    } catch (error) {
+        console.error("Error fetching customer:", error);
+        
+    
+        currentCustomerId = null;
+        document.getElementById('customerName').value = '';
+        document.getElementById('address1').value = '';
+        document.getElementById('address2').value = '';
+        document.getElementById('phone1').value = '';
+        document.getElementById('phone2').value = '';
+        document.getElementById('email').value = '';
+        document.getElementById('gender').value = 'Male';
+        
+        Swal.fire({
+            title: 'Customer Not Found',
+            text: 'No customer found with the provided NIC number.',
+            icon: 'info',
+            confirmButtonColor: '#FFC107',
+            confirmButtonText: 'OK'
+        });
+    }
+    
+    return currentCustomerId;
+}
+
 
 document.addEventListener('DOMContentLoaded', () => {
-
+ 
     const karatInput = document.getElementById('karatValue');
     const addItemBtn = document.querySelector('.btn-next:not(#nextBtn)');
     const resetBtn = document.querySelector('.btn-secondary');
@@ -547,8 +597,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (arrowButton) {
         arrowButton.addEventListener('click', function() {
             if (validateNICField()) {
-               
-                console.log("NIC validated, fetching customer data...");
+                handleCustomerFetch();
              
             }
         });
