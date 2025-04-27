@@ -45,3 +45,26 @@ export async function saveCustomerData(customerData) {
         throw new Error("Failed to save customer");
     }
 }
+
+
+export async function savePawningData(pawningData) {
+    const response = await fetch(`${baseURL}/ticket/save`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(pawningData)
+    });
+    
+    if (!response.ok) {
+        throw new Error("Failed to save pawning data");
+    }
+    
+    const responseData = await response.json();
+    
+    if (responseData && responseData.code === 200) {
+        return responseData.data;
+    } else {
+        throw new Error("Failed to save pawning data");
+    }
+}

@@ -11,7 +11,7 @@ import {
     validateCustomerForm
 } from '../../validation/customerValidation.js';
 
-import { fetchCustomerByNIC, saveCustomerData } from '../../api/api.js';
+import { fetchCustomerByNIC, saveCustomerData, savePawningData } from '../../api/api.js';
 
 
 let articles = [];
@@ -372,7 +372,7 @@ function goToPreviousPage() {
     }
 }
 
-function setPawningSummary(formData){
+function setPawningSummary(formData) {
     document.getElementById('summary-name').textContent = formData.customerName;
     document.getElementById('summary-gender').textContent = formData.gender;
 
@@ -505,6 +505,85 @@ async function handleCustomerFetch() {
 
 
 
+async function handlePawnSave() {
+    try {
+    
+        const pawningItems = articles.map(item => {
+            return {
+                customerId: currentCustomerId || "",
+                article: item.name,
+                adjustableValue: parseFloat(item.adjustment || 0),
+                assetValue: parseFloat(item.calculatedLoan || 0),
+                monthlyInterest: parseFloat(item.interestRate || 0),
+                karatValue: item.karat + "K",
+                expiryDate: formatDateToISO(item.dueDate),
+                createdDate: getCurrentDateISO(),
+                netWeight: parseFloat(item.weight || 0),
+                grossWeight: parseFloat(item.grossWeight || 0),
+                loanAmount: parseFloat(item.adjustedLoan || 0),
+                dailyInterest: parseFloat(item.dailyInterest || 0),
+                interestAmount: parseFloat(item.interest || 0),
+                note: item.notes || "",
+                status: "Pending"
+            };
+        });
+
+    
+        const totalLoanText = document.getElementById('summary-totalLoan').textContent;
+        const totalAssetText = document.getElementById('summary-totalCalculatedValue').textContent;
+
+        const totalLoanAmount = parseFloat(totalLoanText.replace('LKR ', ''));
+        const totalAssetValue = parseFloat(totalAssetText.replace('LKR ', ''));
+
+ 
+        const pawningData = {
+            ticketId: 0,
+            customerId: currentCustomerId || "",
+            pawningDate: getCurrentDateISO(),
+            totalLoanAmount: totalLoanAmount,
+            totalAssetValue: totalAssetValue,
+            status: "ACTIVE",
+            pawningItemsDTOS: pawningItems
+        };
+
+    
+        const result = await savePawningData(pawningData);
+
+        Swal.fire({
+            title: 'Success',
+            text: 'Pawning data saved successfully!',
+            icon: 'success',
+            confirmButtonColor: '#FFC107',
+            confirmButtonText: 'OK'
+        });
+
+        return true;
+    } catch (error) {
+        console.error('Error saving pawning data:', error);
+
+        Swal.fire({
+            title: 'Error',
+            text: 'Failed to save pawning data. Please try again.',
+            icon: 'error',
+            confirmButtonColor: '#FFC107',
+            confirmButtonText: 'OK'
+        });
+
+        return false;
+    }
+}
+
+
+function getCurrentDateISO() {
+    return new Date().toISOString();
+}
+
+
+function formatDateToISO(dateString) {
+    return new Date(dateString).toISOString();
+}
+
+
 
 
 
@@ -520,6 +599,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const nextBtn = document.getElementById('nextBtn');
     const previousBtn = document.querySelector(".btn-previous");
     const previousToCusBtn = document.getElementById('prevBtn2')
+    const printButton = document.getElementById('printReceiptBtn');
 
     const nicInput = document.getElementById('nic');
     const customerNameInput = document.getElementById('customerName');
@@ -592,6 +672,8 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         console.log('Reset button not found');
     }
+
+    
 
     if (articlesTableBody) {
         articlesTableBody.addEventListener('click', (e) => {
@@ -695,9 +777,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             } else {
                 handleCustomerSave()
-              
-             
+
+
             }
         });
+    }
+
+
+    if (printButton) {
+        printButton.addEventListener('click', async function (event) {
+            event.preventDefault();
+            handlePawnSave()
+
+        });
+    } else {
+        console.log('Print button not found');
     }
 });
