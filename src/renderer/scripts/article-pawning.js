@@ -11,6 +11,7 @@ import {
     validateCustomerForm
 } from '../../validation/customerValidation.js';
 
+
 import { fetchCustomerByNIC, saveCustomerData, savePawningData } from '../../api/api.js';
 
 
@@ -584,9 +585,32 @@ function formatDateToISO(dateString) {
 }
 
 
+function clearCustomerFields() {
+    document.getElementById('customerName').value = '';
+    document.getElementById('address1').value = '';
+    document.getElementById('address2').value = '';
+    document.getElementById('phone1').value = '';
+    document.getElementById('phone2').value = '';
+    document.getElementById('email').value = '';
+    document.getElementById('gender').value = 'Male';
+    
 
-
-
+    const errorFields = ['nic', 'customerName', 'address1', 'address2', 'phone1', 'phone2', 'email', 'gender'];
+    errorFields.forEach(fieldId => {
+      const errorElement = document.getElementById(`${fieldId}-error`);
+      if (errorElement) {
+        errorElement.textContent = '';
+        errorElement.style.display = 'none';
+      }
+      
+      const inputElement = document.getElementById(fieldId);
+      if (inputElement) {
+        inputElement.classList.remove('input-error');
+      }
+    });
+    
+    currentCustomerId = null;
+  }
 
 
 
@@ -667,6 +691,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         confirmButtonText: 'OK'
                     });
                 }
+                nextBtn.disabled=true;
             });
         });
     } else {
@@ -793,4 +818,28 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         console.log('Print button not found');
     }
+
+    document.querySelectorAll('input[type="number"]').forEach(input => {
+        input.addEventListener('keydown', function (e) {
+          if (["e", "E", "+", "-"].includes(e.key)) {
+            e.preventDefault();
+          }
+        });
+      });
+   
+   
+  
+      if (nicInput) {
+        nicInput.addEventListener('input', function(event) {
+      
+          if (event.target.value.trim() === '') {
+            clearCustomerFields();
+          } else {
+            validateNICField();
+          }
+        });
+        
+     
+        nicInput.addEventListener('blur', validateNICField);
+      }
 });

@@ -1,6 +1,4 @@
-// validation/customerValidation.js
 
-// Validation functions for individual fields
 export function validateNIC(nic) {
     if (!nic) return 'NIC required';
     if (!/^(?:\d{9}[VvXx]|\d{12})$/.test(nic)) {
@@ -27,7 +25,7 @@ export function validateAddress1(address) {
 }
 
 export function validateAddress2(address) {
-    if (!address) return ''; // Optional field
+    if (!address) return ''; 
     if (address.length > 200) return 'Address too long (max 200 chars)';
     return '';
 }
@@ -42,7 +40,7 @@ export function validatePhone(phone, isRequired = true) {
 }
 
 export function validateEmail(email) {
-    if (!email) return ''; // Optional field
+    if (!email) return ''; 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         return 'Invalid email';
     }
@@ -57,7 +55,6 @@ export function validateGender(gender) {
     return '';
 }
 
-// Function to create or get error element
 export function getErrorElement(fieldId) {
     let errorElement = document.getElementById(`${fieldId}-error`);
     if (!errorElement) {
@@ -71,14 +68,13 @@ export function getErrorElement(fieldId) {
         errorElement.style.fontSize = '0.8rem';
         errorElement.style.margin = '5px 0 0 0';
         errorElement.style.padding = '0';
-        
-        // Insert error message after the input element
+    
         inputElement.parentNode.insertBefore(errorElement, inputElement.nextSibling);
     }
     return errorElement;
 }
 
-// Function to display validation result
+
 export function displayValidationResult(fieldId, errorMessage) {
     const inputElement = document.getElementById(fieldId);
     const errorElement = getErrorElement(fieldId);
@@ -92,10 +88,10 @@ export function displayValidationResult(fieldId, errorMessage) {
         inputElement.classList.toggle('input-error', !!errorMessage);
     }
     
-    return !errorMessage; // Return true if valid (no error message)
+    return !errorMessage; 
 }
 
-// Individual field validation functions that connect to DOM
+
 export function validateNICField() {
     const nic = document.getElementById('nic').value.trim();
     const errorMessage = validateNIC(nic);
@@ -122,13 +118,13 @@ export function validateAddress2Field() {
 
 export function validatePhone1Field() {
     const phone = document.getElementById('phone1').value.trim();
-    const errorMessage = validatePhone(phone, true); // Required field
+    const errorMessage = validatePhone(phone, true); 
     return displayValidationResult('phone1', errorMessage);
 }
 
 export function validatePhone2Field() {
     const phone = document.getElementById('phone2').value.trim();
-    const errorMessage = validatePhone(phone, false); // Optional field
+    const errorMessage = validatePhone(phone, false);
     return displayValidationResult('phone2', errorMessage);
 }
 
@@ -144,7 +140,7 @@ export function validateGenderField() {
     return displayValidationResult('gender', errorMessage);
 }
 
-// Validate all customer form fields at once - useful for form submission
+
 export function validateCustomerForm() {
     const nicValid = validateNICField();
     const nameValid = validateCustomerNameField();
