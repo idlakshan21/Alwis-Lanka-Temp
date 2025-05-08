@@ -537,5 +537,132 @@ th {
 }
 
 .form-group {
-    position: relative; /* Needed for proper error message positioning */
+    position: relative; 
 }
+
+
+
+
+
+
+
+
+
+    
+   
+    
+.receipt-page {
+    width: 8.5in;     
+    height: 5.5in;         
+    min-height: 5.5in;   
+    border: 1px solid var(--secondary-color);
+    padding: 0.3in;       
+    margin-bottom: 30px;
+    page-break-after: always;
+    position: relative;
+    overflow: hidden;     
+    box-sizing: border-box; 
+    background-color: transparent;
+}
+ 
+    .receipt-content {
+        position: relative;
+        z-index: 1;
+    }
+    
+    
+    .receipt-ticket { 
+        padding: 8px;
+        text-align: center;
+        width: 30%;
+        margin: 10px auto;
+    }
+    
+    .receipt-ticket h3 {
+        font-size: 14px;
+        margin-bottom: 5px;
+        text-transform: uppercase;
+    }
+    
+    .main-content {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 15px;
+    }
+    
+    .customer-section {
+        width: 48%;
+        padding: 10px;
+        min-height: 140px;
+    }
+    
+    .items-section {
+        width: 48%;
+        padding: 10px;
+        min-height: 140px;
+    }
+    
+    .customer-section-title, .items-section-title {
+        font-weight: bold;
+        margin-bottom: 8px;
+        padding-bottom: 5px;
+    }
+    
+   
+    
+    .items-table {
+        width: 100%;
+
+    }
+    .items-table th{
+        border: none;
+    }
+    
+    .items-table th, .items-table td {
+    
+        padding: 4px;
+    }
+    
+    .items-table th {
+    
+        text-align: center;
+    }
+    
+    .bottom-section {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 15px;
+    }
+    
+    .amount-section, .period-section, .redemption-section {
+        width: 30%;
+        min-height: 60px;
+    }
+    
+    .section-title {
+        font-weight: bold;
+        margin-bottom: 5px;
+    
+    }
+ 
+
+    
+    .page-number {
+        text-align: right;
+        margin-bottom: 10px;
+        font-size: 10px;
+    }
+    
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        .receipt-page, .receipt-page * {
+            visibility: visible;
+        }
+        .receipt-page {
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+    }

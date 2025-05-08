@@ -12,7 +12,7 @@ import {
 } from '../../validation/customerValidation.js';
 
 
-import { fetchCustomerByNIC, saveCustomerData, savePawningData } from '../../api/api.js';
+import { fetchCustomerByNIC, saveCustomerData, savePawningData, fetchTicketData } from '../../api/api.js';
 
 
 let articles = [];
@@ -508,7 +508,7 @@ async function handleCustomerFetch() {
 
 async function handlePawnSave() {
     try {
-    
+
         const pawningItems = articles.map(item => {
             return {
                 customerId: currentCustomerId || "",
@@ -529,14 +529,14 @@ async function handlePawnSave() {
             };
         });
 
-    
+
         const totalLoanText = document.getElementById('summary-totalLoan').textContent;
         const totalAssetText = document.getElementById('summary-totalCalculatedValue').textContent;
 
         const totalLoanAmount = parseFloat(totalLoanText.replace('LKR ', ''));
         const totalAssetValue = parseFloat(totalAssetText.replace('LKR ', ''));
 
- 
+
         const pawningData = {
             ticketId: 0,
             customerId: currentCustomerId || "",
@@ -547,7 +547,7 @@ async function handlePawnSave() {
             pawningItemsDTOS: pawningItems
         };
 
-    
+
         const result = await savePawningData(pawningData);
 
         Swal.fire({
@@ -593,26 +593,247 @@ function clearCustomerFields() {
     document.getElementById('phone2').value = '';
     document.getElementById('email').value = '';
     document.getElementById('gender').value = 'Male';
-    
+
 
     const errorFields = ['nic', 'customerName', 'address1', 'address2', 'phone1', 'phone2', 'email', 'gender'];
     errorFields.forEach(fieldId => {
-      const errorElement = document.getElementById(`${fieldId}-error`);
-      if (errorElement) {
-        errorElement.textContent = '';
-        errorElement.style.display = 'none';
-      }
-      
-      const inputElement = document.getElementById(fieldId);
-      if (inputElement) {
-        inputElement.classList.remove('input-error');
-      }
+        const errorElement = document.getElementById(`${fieldId}-error`);
+        if (errorElement) {
+            errorElement.textContent = '';
+            errorElement.style.display = 'none';
+        }
+
+        const inputElement = document.getElementById(fieldId);
+        if (inputElement) {
+            inputElement.classList.remove('input-error');
+        }
     });
-    
+
     currentCustomerId = null;
-  }
+}
 
 
+const receiptsContainer = document.getElementById('receipts');
+
+async function generateReceipts() {
+
+    try {
+        const data = await fetchTicketData();
+        if (data && data.data && data.data.length > 0) {
+            createReceiptPages(data.data);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+
+    }
+}
+
+function createReceiptPages(items) {
+    const itemsPerPage = 5;
+    const totalPages = Math.ceil(items.length / itemsPerPage);
+
+    for (let page = 0; page < totalPages; page++) {
+     
+        const startIdx = page * itemsPerPage;
+        const pageItems = items.slice(startIdx, startIdx + itemsPerPage);
+
+        // Create page element
+        const pageElement = document.createElement('div');
+        pageElement.className = 'receipt-page';
+
+        // Add page content
+        pageElement.innerHTML = createPageContent(pageItems, page + 1, totalPages, items);
+
+        // Add to container
+        receiptsContainer.appendChild(pageElement);
+    }
+}
+
+function createPageContent(items, pageNumber, totalPages, allItems) {
+    // Extract customer info from first item (all items should have the same customer info)
+    const customerInfo = items[0];
+
+    // Calculate totals
+    const pageTotalLoan = items.reduce((sum, item) => sum + item.loanAmount, 0);
+    const pageTotalInterest = items.reduce((sum, item) => sum + item.interestAmount, 0);
+    const pageTotalWeight = items.reduce((sum, item) => sum + item.netWeight, 0);
+
+
+    // Format the date for display
+    const createdDate = formatDate(customerInfo.createdDate);
+    const expiryDate = formatDate(customerInfo.expiryDate);
+
+    let html = `
+    <div class="receipt-content">
+      <div class="receipt-info">
+        <table>
+          <tr>
+            <td>
+              <div style="position: absolute; left: 40mm; top: 30mm;"> ${createdDate}</div>
+              <div class="customer-info-row" style="position: absolute; left: 40mm; top: 40mm;"> ${customerInfo.ticketNo}</div>
+            </td>
+            <td>
+              <div style="position: absolute; left: 160mm; top: 40mm;">${new Date().toLocaleTimeString()}</div>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="main-content">
+        <div class="customer-section">
+        <div  style="position: absolute; left: 20mm; top: 58mm;">
+         <div class="customer-info-row">${customerInfo.customerName}</div>
+          <div class="customer-info-row">${customerInfo.customerAddressOne}</div>
+        </div>
+         
+          <div class="customer-info-row" style="position: absolute; left: 60mm; top: 75mm;"> ${customerInfo.customerNic}</div>
+          <div class="customer-info-row" style="position: absolute; left: 60mm; top: 82mm;"> ${customerInfo.customerContactOne}</div>
+          
+        </div>
+
+      
+        <div class="items-section" style="position: absolute; left: 103mm; top: 58mm;">
+          <div class="items-table">
+            <div class="items-body">
+    `;
+
+    // Add items for this page
+    items.forEach((item, index) => {
+        html += `
+              <div class="item-row" style="position: absolute; left: 0mm; top: ${(index + 1) * 7}mm;">
+                <div class="item-col" style="position: absolute; left: 0mm;">${item.article}</div>
+                <div class="weight-col" style="position: absolute; left: 22mm;">${item.netWeight}</div>
+                <div class="gold-content-col" style="position: absolute; left: 42mm;">${item.karatValue}</div>
+              </div>
+        `;
+    });
+
+    html += `
+              <div class="total-weight" style="position: absolute; left: 42mm; top: ${(items.length + 1) * 7}mm;">
+                ${formatNumber(pageTotalWeight)} Grams
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bottom-section">
+        <div class="amount-section">
+          <div style="position: absolute; left: 40mm; top: 90mm;"> ${formatCurrency(pageTotalLoan)}</div>
+          <div style="position: absolute; left: 40mm; top: 100mm;">${formatCurrency(pageTotalLoan + pageTotalInterest)}</div>
+        </div>
+
+        <div class="period-section">
+          <div style="position: absolute; left: 95mm; top: 90mm;"> 12 months</div>
+        </div>
+
+        <div class="redemption-section">
+          <div style="position: absolute; left: 170mm; top: 90mm;">${expiryDate}</div>
+        </div>
+      </div>
+
+      <div class="page-number" style="position: absolute; left: 190mm; top: 120mm;">
+        ${pageNumber} of ${totalPages}
+      </div>
+    </div>
+  `;
+    return html;
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+}
+
+function formatCurrency(amount) {
+    return amount.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
+function formatNumber(num) {
+    return num.toLocaleString('en-US', {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1
+    });
+}
+
+function showPrintPreview() {
+    // Scroll to receipts for user to see them
+    receiptsContainer.scrollIntoView({ behavior: 'smooth' });
+    
+    // Optional: Highlight the receipt area temporarily
+    receiptsContainer.style.border = '2px dashed #FFC107';
+    receiptsContainer.style.padding = '10px';
+    setTimeout(() => {
+        receiptsContainer.style.border = 'none';
+        receiptsContainer.style.padding = '0';
+    }, 10000);
+}
+
+// Print function
+function printReceipts() {
+    return new Promise((resolve) => {
+        // Create print-specific styles
+        const printStyles = `
+            @media print {
+                body * {
+                    visibility: hidden;
+                }
+                #receipts, #receipts * {
+                    visibility: visible;
+                }
+                .receipt-page {
+                    position: relative;
+                    left: 0;
+                    top: 0;
+                    width: 8.5in;
+                    height: 5.5in;
+                    page-break-after: always;
+                    margin: 0;
+                    padding: 0;
+                    border: none;
+                }
+                @page {
+                    size: 8.5in 5.5in;
+                    margin: 0;
+                }
+            }
+        `;
+        
+        // Create a style element
+        const styleElement = document.createElement('style');
+        styleElement.innerHTML = printStyles;
+        
+        // Create a print container
+        const printContainer = document.createElement('div');
+        printContainer.id = 'print-container';
+        
+        // Clone the receipts
+        const receiptsClone = receiptsContainer.cloneNode(true);
+        printContainer.appendChild(styleElement);
+        printContainer.appendChild(receiptsClone);
+        
+        // Add to body (hidden)
+        printContainer.style.position = 'fixed';
+        printContainer.style.left = '-9999px';
+        document.body.appendChild(printContainer);
+        
+        // Print and clean up
+        window.onafterprint = () => {
+            document.body.removeChild(printContainer);
+            window.onafterprint = null;
+            resolve();
+        };
+        
+        window.print();
+    });
+}
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -635,6 +856,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const genderSelect = document.getElementById('gender');
     const nextSummaryBtn = document.getElementById('btn-next-summary');
     const arrowButton = document.getElementById('arrow-button');
+
+    const reviewButton = document.getElementById('reviewBtn');
+    
 
     if (addItemBtn) {
         addItemBtn.addEventListener('click', calculateAndAddItem);
@@ -691,14 +915,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         confirmButtonText: 'OK'
                     });
                 }
-                nextBtn.disabled=true;
+                nextBtn.disabled = true;
             });
         });
     } else {
         console.log('Reset button not found');
     }
 
-    
+
 
     if (articlesTableBody) {
         articlesTableBody.addEventListener('click', (e) => {
@@ -812,34 +1036,128 @@ document.addEventListener('DOMContentLoaded', () => {
     if (printButton) {
         printButton.addEventListener('click', async function (event) {
             event.preventDefault();
-            handlePawnSave()
-
+            try {
+                // First save the pawn data
+                const isSaved = await handlePawnSave();
+                
+                if (isSaved) {
+                    // Clear any existing receipts
+                    receiptsContainer.innerHTML = '';
+                    
+                    // Generate new receipts
+                    await generateReceipts();
+                    
+                    // Show preview (optional - you can remove if not needed)
+                    //showPrintPreview();
+                    
+                    // Send to printer
+                    await printReceipts();
+                }
+            } catch (error) {
+                console.error('Error in print process:', error);
+                Swal.fire({
+                    title: 'Print Error',
+                    text: 'An error occurred during printing. Please try again.',
+                    icon: 'error',
+                    confirmButtonColor: '#d33',
+                    confirmButtonText: 'OK'
+                });
+            }
         });
-    } else {
-        console.log('Print button not found');
     }
 
     document.querySelectorAll('input[type="number"]').forEach(input => {
         input.addEventListener('keydown', function (e) {
-          if (["e", "E", "+", "-"].includes(e.key)) {
-            e.preventDefault();
-          }
+            if (["e", "E", "+", "-"].includes(e.key)) {
+                e.preventDefault();
+            }
         });
-      });
-   
-   
-  
-      if (nicInput) {
-        nicInput.addEventListener('input', function(event) {
-      
-          if (event.target.value.trim() === '') {
-            clearCustomerFields();
-          } else {
-            validateNICField();
-          }
+    });
+
+
+
+    if (nicInput) {
+        nicInput.addEventListener('input', function (event) {
+
+            if (event.target.value.trim() === '') {
+                clearCustomerFields();
+            } else {
+                validateNICField();
+            }
         });
-        
-     
+
+
         nicInput.addEventListener('blur', validateNICField);
-      }
+    }
+
+    // if (reviewButton) {
+    //     reviewButton.addEventListener('click', printReceipts);
+    // } else {
+    //     console.log('previous button not found');
+    // }
+
+
+    // function printReceipts() {
+    //     const receiptsContainer = document.getElementById('receipts');
+       
+    
+    //     if (!receiptsContainer || receiptsContainer.children.length === 0) {
+    //         alert('No receipts to download. Please generate receipts first.');
+    //         return;
+    //     }
+    
+      
+    
+    //     let ticketNo = 'receipt';
+    //     try {
+    //         const ticketElement = [...receiptsContainer.querySelectorAll('.customer-info-row')]
+    //             .find(el => el.textContent.includes('Ticket #:'));
+    //         if (ticketElement) {
+    //             ticketNo = ticketElement.textContent.split(':')[1].trim();
+    //         }
+    //     } catch (error) {
+    //         console.log('Could not extract ticket number, using default filename');
+    //     }
+    
+    //     const options = {
+    //         margin: 10,
+    //         filename: `${ticketNo}_${new Date().toISOString().slice(0, 10)}.pdf`,
+    //         image: { type: 'jpeg', quality: 0.98 },
+    //         html2canvas: { 
+    //             scale: 2,
+    //             useCORS: true,
+    //             letterRendering: true,
+    //             allowTaint: true
+    //         },
+    //         jsPDF: { 
+    //             unit: 'mm', 
+    //             format: [216, 140], // Custom size: ~8.5x5.5 inches in mm (216mm x 140mm)
+    //             orientation: 'portrait' 
+    //         }
+    //     };
+    
+    //     // Generate and download PDF
+    //     html2pdf()
+    //         .from(receiptsContainer)
+    //         .set(options)
+    //         .save()
+    //         .then(() => {
+    //             // Return a blob URL for preview
+    //             return html2pdf()
+    //                 .from(receiptsContainer)
+    //                 .set(options)
+    //                 .outputPdf('bloburl');
+    //         })
+    //         .then((pdfBlobUrl) => {
+              
+    //             window.open(pdfBlobUrl); // Open preview in new tab
+    //         })
+    //         .catch(error => {
+    //             console.error('Error generating PDF:', error);
+    //             alert('Error generating PDF. Please try again.');
+                
+    //         });
+    // }
 });
+
+

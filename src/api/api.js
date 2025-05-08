@@ -68,3 +68,19 @@ export async function savePawningData(pawningData) {
         throw new Error("Failed to save pawning data");
     }
 }
+
+export async function fetchTicketData() {
+    try {
+      const response = await fetch(`${baseURL}/ticket/lastTicket/`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const data = await response.json();
+      console.log(data);
+      
+      return data;
+    } catch (error) {
+      console.error('Fetch error:', error);
+      throw error;
+    }
+  }
