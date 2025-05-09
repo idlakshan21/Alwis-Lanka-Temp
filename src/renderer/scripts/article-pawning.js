@@ -616,24 +616,29 @@ function clearCustomerFields() {
 const receiptsContainer = document.getElementById('receipts');
 
 async function generateReceipts() {
+    receiptsContainer.innerHTML = '';
 
     try {
         const data = await fetchTicketData();
         if (data && data.data && data.data.length > 0) {
             createReceiptPages(data.data);
+        } else {
+            receiptsContainer.innerHTML = '<p>No data found for this customer.</p>';
         }
     } catch (error) {
         console.error('Error:', error);
-
+        receiptsContainer.innerHTML = `<p>Error: ${error.message}</p>`;
     }
 }
 
-function createReceiptPages(items) {
-    const itemsPerPage = 5;
-    const totalPages = Math.ceil(items.length / itemsPerPage);
 
-    for (let page = 0; page < totalPages; page++) {
-     
+  function createReceiptPages(items) {
+      // Calculate number of pages needed (2 items per page)
+      const itemsPerPage = 2;
+      const totalPages = Math.ceil(items.length / itemsPerPage);
+
+      for (let page = 0; page < totalPages; page++) {
+        // Get items for this page
         const startIdx = page * itemsPerPage;
         const pageItems = items.slice(startIdx, startIdx + itemsPerPage);
 
@@ -646,71 +651,63 @@ function createReceiptPages(items) {
 
         // Add to container
         receiptsContainer.appendChild(pageElement);
+      }
     }
-}
 
-function createPageContent(items, pageNumber, totalPages, allItems) {
+
+ function createPageContent(items, pageNumber, totalPages, allItems) {
     // Extract customer info from first item (all items should have the same customer info)
     const customerInfo = items[0];
 
     // Calculate totals
     const pageTotalLoan = items.reduce((sum, item) => sum + item.loanAmount, 0);
-    const pageTotalInterest = items.reduce((sum, item) => sum + item.interestAmount, 0);
+
     const pageTotalWeight = items.reduce((sum, item) => sum + item.netWeight, 0);
 
 
-    // Format the date for display
     const createdDate = formatDate(customerInfo.createdDate);
     const expiryDate = formatDate(customerInfo.expiryDate);
 
     let html = `
     <div class="receipt-content">
+      
       <div class="receipt-info">
-        <table>
-          <tr>
-            <td>
-              <div style="position: absolute; left: 40mm; top: 30mm;"> ${createdDate}</div>
-              <div class="customer-info-row" style="position: absolute; left: 40mm; top: 40mm;"> ${customerInfo.ticketNo}</div>
-            </td>
-            <td>
-              <div style="position: absolute; left: 160mm; top: 40mm;">${new Date().toLocaleTimeString()}</div>
-            </td>
-          </tr>
-        </table>
+        <div class="date" style="position: absolute; left: 60m; top: 14mm;"><strong>${createdDate}</strong></div>
+        <div class="bill-no" style="position: absolute; left: 23mm; top: 23mm;"><strong>${customerInfo.ticketNo}</strong></div>
+        <div class="time" style="position: absolute; left: 150mm; top: 24mm;">${new Date().toLocaleTimeString()}</div>
       </div>
 
       <div class="main-content">
         <div class="customer-section">
-        <div  style="position: absolute; left: 20mm; top: 58mm;">
-         <div class="customer-info-row">${customerInfo.customerName}</div>
-          <div class="customer-info-row">${customerInfo.customerAddressOne}</div>
-        </div>
-         
-          <div class="customer-info-row" style="position: absolute; left: 60mm; top: 75mm;"> ${customerInfo.customerNic}</div>
-          <div class="customer-info-row" style="position: absolute; left: 60mm; top: 82mm;"> ${customerInfo.customerContactOne}</div>
-          
+          <div class="name-address" style="position: absolute; left: -5mm; top: 41mm;">
+            <div class="cusname"><strong>${customerInfo.customerName}</strong></div>
+            <div class="cusaddress">${customerInfo.customerAddressOne}</div>
+          </div>
+          <div class="nic" style="position: absolute; left: 42mm; top: 64mm;">${customerInfo.customerNic}</div>
+          <div class="tel-no" style="position: absolute; left: 32mm; top: 71mm;">
+            ${customerInfo.customerContactOne}
+          </div>
         </div>
 
-      
-        <div class="items-section" style="position: absolute; left: 103mm; top: 58mm;">
+        <div class="items-section" style="position: absolute; left: 90mm; top: 38mm;">
           <div class="items-table">
             <div class="items-body">
     `;
 
-    // Add items for this page
+   
     items.forEach((item, index) => {
         html += `
               <div class="item-row" style="position: absolute; left: 0mm; top: ${(index + 1) * 7}mm;">
-                <div class="item-col" style="position: absolute; left: 0mm;">${item.article}</div>
-                <div class="weight-col" style="position: absolute; left: 22mm;">${item.netWeight}</div>
-                <div class="gold-content-col" style="position: absolute; left: 42mm;">${item.karatValue}</div>
+                <div class="item-col" style="position: absolute; left: 0mm;"><strong>${item.article}</strong></div>
+                <div class="weight-col" style="position: absolute; left: 26mm;"><strong>${item.netWeight}</strong></div>
+                <div class="gold-content-col" style="position: absolute; left: 45mm;"><strong>18-22KT</strong></div>
               </div>
         `;
     });
 
     html += `
-              <div class="total-weight" style="position: absolute; left: 42mm; top: ${(items.length + 1) * 7}mm;">
-                ${formatNumber(pageTotalWeight)} Grams
+              <div class="total-weight" style="position: absolute; left: 44mm; top:30mm;">
+                <strong>${formatNumber(pageTotalWeight)}</strong>
               </div>
             </div>
           </div>
@@ -718,122 +715,84 @@ function createPageContent(items, pageNumber, totalPages, allItems) {
       </div>
 
       <div class="bottom-section">
-        <div class="amount-section">
-          <div style="position: absolute; left: 40mm; top: 90mm;"> ${formatCurrency(pageTotalLoan)}</div>
-          <div style="position: absolute; left: 40mm; top: 100mm;">${formatCurrency(pageTotalLoan + pageTotalInterest)}</div>
+        <div class="amount-section" style="position: absolute; left: 15mm; top: 80mm;">
+          <div><strong>${formatCurrency(pageTotalLoan)}</strong></div>
+        
         </div>
 
-        <div class="period-section">
-          <div style="position: absolute; left: 95mm; top: 90mm;"> 12 months</div>
+        <div class="period-section" style="position: absolute; left: 75mm; top: 80mm;">
+          <div><strong>12 months</strong></div>
         </div>
 
-        <div class="redemption-section">
-          <div style="position: absolute; left: 170mm; top: 90mm;">${expiryDate}</div>
+        <div class="redemption-section" style="position: absolute; left: 157mm; top: 80mm;">
+          <div><strong>${expiryDate}</strong></div>
+        </div>
+
+        <div class="gold-loan-advance" style="position: absolute; left: 40mm; top: 100mm;">
+         
         </div>
       </div>
 
-      <div class="page-number" style="position: absolute; left: 190mm; top: 120mm;">
+
+      <div class="page-number">
         ${pageNumber} of ${totalPages}
       </div>
     </div>
-  `;
+    `;
+
     return html;
 }
 
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
-    });
-}
+      });
+    }
 
-function formatCurrency(amount) {
-    return amount.toLocaleString('en-US', {
+    function formatCurrency(amount) {
+      return amount.toLocaleString('en-US', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
-    });
-}
+      });
+    }
 
-function formatNumber(num) {
-    return num.toLocaleString('en-US', {
+    function formatNumber(num) {
+      return num.toLocaleString('en-US', {
         minimumFractionDigits: 1,
         maximumFractionDigits: 1
-    });
-}
+      });
+    }
 
-function showPrintPreview() {
-    // Scroll to receipts for user to see them
-    receiptsContainer.scrollIntoView({ behavior: 'smooth' });
-    
-    // Optional: Highlight the receipt area temporarily
-    receiptsContainer.style.border = '2px dashed #FFC107';
-    receiptsContainer.style.padding = '10px';
-    setTimeout(() => {
-        receiptsContainer.style.border = 'none';
-        receiptsContainer.style.padding = '0';
-    }, 10000);
-}
-
-// Print function
-function printReceipts() {
-    return new Promise((resolve) => {
-        // Create print-specific styles
-        const printStyles = `
-            @media print {
-                body * {
-                    visibility: hidden;
-                }
-                #receipts, #receipts * {
-                    visibility: visible;
-                }
-                .receipt-page {
-                    position: relative;
-                    left: 0;
-                    top: 0;
-                    width: 8.5in;
-                    height: 5.5in;
-                    page-break-after: always;
-                    margin: 0;
-                    padding: 0;
-                    border: none;
-                }
-                @page {
-                    size: 8.5in 5.5in;
-                    margin: 0;
-                }
-            }
-        `;
-        
-        // Create a style element
-        const styleElement = document.createElement('style');
-        styleElement.innerHTML = printStyles;
-        
-        // Create a print container
-        const printContainer = document.createElement('div');
-        printContainer.id = 'print-container';
-        
-        // Clone the receipts
-        const receiptsClone = receiptsContainer.cloneNode(true);
-        printContainer.appendChild(styleElement);
-        printContainer.appendChild(receiptsClone);
-        
-        // Add to body (hidden)
-        printContainer.style.position = 'fixed';
-        printContainer.style.left = '-9999px';
-        document.body.appendChild(printContainer);
-        
-        // Print and clean up
-        window.onafterprint = () => {
-            document.body.removeChild(printContainer);
-            window.onafterprint = null;
-            resolve();
-        };
-        
+    function printReceipts() {
+        console.log("print");
         window.print();
-    });
-}
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -856,8 +815,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const genderSelect = document.getElementById('gender');
     const nextSummaryBtn = document.getElementById('btn-next-summary');
     const arrowButton = document.getElementById('arrow-button');
+    const printReceiptBtn=document.getElementById('print-btn')
 
-    const reviewButton = document.getElementById('reviewBtn');
+ 
+
+    
+
+  
     
 
     if (addItemBtn) {
@@ -1037,21 +1001,13 @@ document.addEventListener('DOMContentLoaded', () => {
         printButton.addEventListener('click', async function (event) {
             event.preventDefault();
             try {
-                // First save the pawn data
                 const isSaved = await handlePawnSave();
-                
                 if (isSaved) {
-                    // Clear any existing receipts
-                    receiptsContainer.innerHTML = '';
+                   
+                receiptsContainer.innerHTML = '';
                     
-                    // Generate new receipts
                     await generateReceipts();
-                    
-                    // Show preview (optional - you can remove if not needed)
-                    //showPrintPreview();
-                    
-                    // Send to printer
-                    await printReceipts();
+               
                 }
             } catch (error) {
                 console.error('Error in print process:', error);
@@ -1090,11 +1046,11 @@ document.addEventListener('DOMContentLoaded', () => {
         nicInput.addEventListener('blur', validateNICField);
     }
 
-    // if (reviewButton) {
-    //     reviewButton.addEventListener('click', printReceipts);
-    // } else {
-    //     console.log('previous button not found');
-    // }
+    if (printReceiptBtn) {
+        printReceiptBtn.addEventListener('click', printReceipts);
+    } else {
+        console.log('previous button not found');
+    }
 
 
     // function printReceipts() {
